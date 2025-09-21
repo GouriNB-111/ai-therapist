@@ -8,7 +8,7 @@ import google.generativeai as genai
 import plotly.express as px
 
 # ---------------- Load API Key ---------------- #
-genai.configure(api_key=st.secrets["GEMINI_API_KEY"])
+genai.configure(api_key=st.secrets["GOOGLE_API_KEY"])
 
 # ---------------- Streamlit Config ---------------- #
 st.set_page_config(page_title="AI Therapist", page_icon="💬", layout="wide")
