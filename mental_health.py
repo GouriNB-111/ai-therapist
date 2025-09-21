@@ -272,25 +272,30 @@ with st.sidebar:
     st.info(random.choice(AFFIRMATIONS))
 
 # ---------------- Main Chat Area ---------------- #
-model = genai.GenerativeModel("gemini-2.5-flash")
 user_input = st.chat_input("How are you feeling today?")
 
 if user_input:
+    if "chat_history" not in st.session_state:
+        st.session_state.chat_history = []
     st.session_state.chat_history.append(("user", user_input))
-    response = model.generate_content(
-        f"You are an empathetic AI therapist. Respond kindly and supportively to: {user_input}"
+
+    # Use v0.2.0 compatible model
+    response = genai.generate_text(
+        model="models/text-bison-001",
+        prompt=f"You are a kind AI therapist. Respond supportively to: {user_input}",
+        temperature=0.7,
+        max_output_tokens=300
     )
-    bot_reply = response.text
+    bot_reply = response.candidates[0].output
     st.session_state.chat_history.append(("bot", bot_reply))
-    st.session_state.last_user_was_stressed = detect_stress(user_input)
 
 # Render chat
-for role,msg in st.session_state.chat_history:
-    if role=="user":
+for role, msg in st.session_state.chat_history:
+    if role == "user":
         st.chat_message("user").write(msg)
     else:
         st.chat_message("assistant").write(msg)
-
+        
 # Suggested activities if stressed
 if st.session_state.get("last_user_was_stressed",False):
     st.subheader("💡 Suggested Activities")
