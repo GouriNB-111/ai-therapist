@@ -10,7 +10,7 @@ import plotly.express as px
 
 # ---------------- Load API Key ---------------- #
 load_dotenv()
-genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
+genai.configure(api_key=os.getenv("GOOGLE_API_KEY"))
 
 # ---------------- Streamlit Config ---------------- #
 st.set_page_config(page_title="AI Therapist", page_icon="💬", layout="wide")
@@ -295,7 +295,7 @@ for role, msg in st.session_state.chat_history:
         st.chat_message("user").write(msg)
     else:
         st.chat_message("assistant").write(msg)
-        
+
 # Suggested activities if stressed
 if st.session_state.get("last_user_was_stressed",False):
     st.subheader("💡 Suggested Activities")
