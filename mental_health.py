@@ -280,10 +280,14 @@ for role, msg in st.session_state.chat_history:
     else:
         st.chat_message("assistant").write(msg)
 
+# Suggested activities if stressed
 if st.session_state.get("last_user_was_stressed", False):
     st.subheader("💡 Suggested Activities")
-    col1, col2 = st.columns(2)
-    if col1.button("🌿 Breathing Exercise", key="suggest_breath"):
-        breathing_exercise()
-    if col2.button("💛 Positive Affirmation", key="suggest_affirm"):
-        show_affirmation()
+    try:
+        cols = st.columns(2)
+        if cols[0].button("🌿 Breathing Exercise", key="suggest_breath"):
+            breathing_exercise()
+        if cols[1].button("💛 Positive Affirmation", key="suggest_affirm"):
+            show_affirmation()
+    except Exception as e:
+        st.error(f"Error displaying suggested activities: {e}")
