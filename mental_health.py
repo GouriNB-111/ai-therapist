@@ -279,14 +279,17 @@ if user_input:
         st.session_state.chat_history = []
     st.session_state.chat_history.append(("user", user_input))
 
-    # Use v0.2.0 compatible model
-    response = genai.generate_text(
-        model="models/text-bison-001",
-        prompt=f"You are a kind AI therapist. Respond supportively to: {user_input}",
-        temperature=0.7,
-        max_output_tokens=300
+    # Use Gemini 1.5 Flash instead of text-bison
+    model = genai.GenerativeModel("gemini-1.5-flash")
+    response = model.generate_content(
+        f"You are a kind AI therapist. Respond supportively to: {user_input}",
+        generation_config={
+            "temperature": 0.7,
+            "max_output_tokens": 300,
+        },
     )
-    bot_reply = response.candidates[0].output
+
+    bot_reply = response.text
     st.session_state.chat_history.append(("bot", bot_reply))
 
 # Render chat
@@ -297,7 +300,7 @@ for role, msg in st.session_state.chat_history:
         st.chat_message("assistant").write(msg)
 
 # Suggested activities if stressed
-if st.session_state.get("last_user_was_stressed",False):
+if st.session_state.get("last_user_was_stressed", False):
     st.subheader("💡 Suggested Activities")
     col1, col2 = st.columns(2)
     if col1.button("🌿 Breathing Exercise", key="suggest_breath"):
