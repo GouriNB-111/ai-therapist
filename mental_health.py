@@ -4,11 +4,13 @@ import json
 import random
 import pandas as pd
 import streamlit as st
+from dotenv import load_dotenv
 import google.generativeai as genai
 import plotly.express as px
 
 # ---------------- Load API Key ---------------- #
-genai.configure(api_key=st.secrets["GOOGLE_API_KEY"])
+load_dotenv()
+genai.configure(api_key=os.getenv("GOOGLE_API_KEY"))
 
 # ---------------- Streamlit Config ---------------- #
 st.set_page_config(page_title="AI Therapist", page_icon="💬", layout="wide")
@@ -16,27 +18,39 @@ st.markdown("<h1 style='text-align:center;color:teal;'>🧠 MINDFUL HAVEN 🌿: 
 st.markdown("<p style='text-align:center;color:gray;'>Safe • Confidential • Supportive • Not a replacement for a licensed therapist</p>", unsafe_allow_html=True)
 
 # ---------------- Session State ---------------- #
-if "chat_history" not in st.session_state: st.session_state.chat_history = []
-if "user_mood" not in st.session_state: st.session_state.user_mood = []
-if "exercise_running" not in st.session_state: st.session_state.exercise_running = False
-if "reflection_answers" not in st.session_state: st.session_state.reflection_answers = [""]*5
+if "chat_history" not in st.session_state:
+    st.session_state.chat_history = []
+if "user_mood" not in st.session_state:
+    st.session_state.user_mood = []
+if "exercise_running" not in st.session_state:
+    st.session_state.exercise_running = False
+if "reflection_answers" not in st.session_state:
+    st.session_state.reflection_answers = [""]*5
 if "habits" not in st.session_state:
-    if os.path.exists("habits.csv"): st.session_state.habits = pd.read_csv("habits.csv")
-    else: st.session_state.habits = pd.DataFrame(columns=["Date","Habit","Done"])
-if "riddle" not in st.session_state: 
+    if os.path.exists("habits.csv"):
+        st.session_state.habits = pd.read_csv("habits.csv")
+    else:
+        st.session_state.habits = pd.DataFrame(columns=["Date","Habit","Done"])
+if "riddle" not in st.session_state:
     st.session_state.riddle = random.choice([
         {"question":"What has keys but can't open locks?","answer":"keyboard"},
         {"question":"What can run but has no legs?","answer":"clock"}
     ])
-if "stroop_word" not in st.session_state: 
+if "stroop_word" not in st.session_state:
     st.session_state.stroop_word = random.choice(["Red","Green","Blue","Yellow"])
     st.session_state.stroop_color = random.choice(["Red","Green","Blue","Yellow"])
-if "last_user_was_stressed" not in st.session_state: st.session_state.last_user_was_stressed = False
-if "reflection_streak" not in st.session_state: st.session_state.reflection_streak = 0
-if "exercise_streak" not in st.session_state: st.session_state.exercise_streak = 0
-if "gratitude_list" not in st.session_state: st.session_state.gratitude_list = []
-if "memory_sequence" not in st.session_state: st.session_state.memory_sequence = random.choices(["Red","Green","Blue","Yellow"], k=3)
-if "show_sequence" not in st.session_state: st.session_state.show_sequence = True
+if "last_user_was_stressed" not in st.session_state:
+    st.session_state.last_user_was_stressed = False
+if "reflection_streak" not in st.session_state:
+    st.session_state.reflection_streak = 0
+if "exercise_streak" not in st.session_state:
+    st.session_state.exercise_streak = 0
+if "gratitude_list" not in st.session_state:
+    st.session_state.gratitude_list = []
+if "memory_sequence" not in st.session_state:
+    st.session_state.memory_sequence = random.choices(["Red","Green","Blue","Yellow"], k=3)
+if "show_sequence" not in st.session_state:
+    st.session_state.show_sequence = True
 
 # ---------------- Stress Detection ---------------- #
 def detect_stress(text):
@@ -62,21 +76,30 @@ def breathing_exercise(cycles=2):
     st.info("🌿 Guided Breathing Exercise")
     display = st.empty()
     for i in range(cycles):
-        if not st.session_state.exercise_running: break
-        display.markdown("🌬️ **Inhale... (4s)**"); time.sleep(4)
-        display.markdown("😮‍💨 **Hold... (4s)**"); time.sleep(4)
-        display.markdown("💨 **Exhale... (6s)**"); time.sleep(6)
+        if not st.session_state.exercise_running:
+            break
+        display.markdown("🌬️ **Inhale... (4s)**")
+        time.sleep(4)
+        display.markdown("😮‍💨 **Hold... (4s)**")
+        time.sleep(4)
+        display.markdown("💨 **Exhale... (6s)**")
+        time.sleep(6)
     st.success("Great job! How do you feel now?")
-    st.session_state.exercise_streak += 1
+    st.session_state.exercise_streak +=1
 
 def show_affirmation():
     st.success(random.choice(AFFIRMATIONS))
 
 # ---------------- Helplines ---------------- #
-HELPLINES = ["KIRAN: 1800 599 0019","Tele-MANAS: 080-4719 5000","iCALL: 9152987821"]
+HELPLINES = [
+    "KIRAN: 1800 599 0019",
+    "Tele-MANAS: 080-4719 5000",
+    "iCALL: 9152987821"
+]
 def show_helplines():
     st.subheader("🚨 Critical Alert: Please Reach Out")
-    for h in HELPLINES: st.markdown(f"- {h}")
+    for h in HELPLINES:
+        st.markdown(f"- {h}")
 
 # ---------------- WHO-5 Reflection ---------------- #
 REFLECTION_QUESTIONS = [
@@ -86,31 +109,38 @@ REFLECTION_QUESTIONS = [
     "4. What are you grateful for today?",
     "5. How would you rate your overall mood today (1–5)?"
 ]
+
 CRITICAL_SCORE = 2
 
 def save_reflection():
     entry = {"answers": st.session_state.reflection_answers, "timestamp": time.strftime("%Y-%m-%d %H:%M:%S")}
     if os.path.exists("checkins.json") and os.path.getsize("checkins.json") > 0:
         with open("checkins.json", "r") as f:
-            try: data = json.load(f)
-            except: data = []
-    else: data = []
+            try:
+                data = json.load(f)
+            except:
+                data = []
+    else:
+        data = []
     data.append(entry)
-    with open("checkins.json", "w") as f: json.dump(data, f, indent=2)
+    with open("checkins.json", "w") as f:
+        json.dump(data, f, indent=2)
     try:
         mood = int(st.session_state.reflection_answers[4])
         st.session_state.user_mood.append(mood)
-        st.session_state.reflection_streak += 1
-        if mood <= CRITICAL_SCORE: show_helplines()
-    except: pass
+        st.session_state.reflection_streak +=1
+        if mood <= CRITICAL_SCORE:
+            show_helplines()
+    except:
+        pass
 
 # ---------------- Mood Graph ---------------- #
 def plot_mood_trends():
     if st.session_state.user_mood:
-        days = list(range(1,len(st.session_state.user_mood)+1))
-        df = pd.DataFrame({"Day":days,"Mood":st.session_state.user_mood})
-        fig = px.line(df,x="Day",y="Mood",markers=True,title="Mood Trend Over Days",
-                      line_shape="spline",color_discrete_sequence=["teal"])
+        days = list(range(1, len(st.session_state.user_mood)+1))
+        df = pd.DataFrame({"Day": days, "Mood": st.session_state.user_mood})
+        fig = px.line(df, x="Day", y="Mood", markers=True, title="Mood Trend Over Days",
+                      line_shape="spline", color_discrete_sequence=["teal"])
         fig.update_layout(yaxis=dict(range=[0,5]), xaxis=dict(dtick=1))
         st.plotly_chart(fig, use_container_width=True)
 
@@ -135,16 +165,18 @@ def habit_tracker():
 def mood_check_game():
     st.subheader("🎯 Quick Mood Check")
     st.write("Select how you feel right now:")
+
     moods = {
-        "😊 Happy":"Great! Keep smiling and doing what you love. 🌟",
-        "😔 Sad":"It's okay to feel sad. Take a deep breath and be gentle with yourself. 💛",
-        "😡 Angry":"Anger is natural. Try some deep breaths or a quick walk to calm down. 🌿",
-        "😰 Anxious":"Notice your anxiety, breathe slowly, and remind yourself it will pass. 🌬️",
-        "😴 Tired":"Rest is important. Take a short break or a power nap. 💤"
+        "😊 Happy": "Great! Keep smiling and doing what you love. 🌟",
+        "😔 Sad": "It's okay to feel sad. Take a deep breath and be gentle with yourself. 💛",
+        "😡 Angry": "Anger is natural. Try some deep breaths or a quick walk to calm down. 🌿",
+        "😰 Anxious": "Notice your anxiety, breathe slowly, and remind yourself it will pass. 🌬️",
+        "😴 Tired": "Rest is important. Take a short break or a power nap. 💤"
     }
-    col1,col2,col3 = st.columns(3)
-    for idx,(mood,advice) in enumerate(moods.items()):
-        col = [col1,col2,col3][idx%3]
+
+    col1, col2, col3 = st.columns(3)
+    for idx, (mood, advice) in enumerate(moods.items()):
+        col = [col1, col2, col3][idx % 3]
         if col.button(mood, key=f"mood_{idx}"):
             st.success(advice)
             st.session_state.user_mood.append(4 if mood=="😊 Happy" else 2)
@@ -156,8 +188,10 @@ def stroop_game():
     st.write(f"Word: **{word}** (in color: {color})")
     for c in ["Red","Green","Blue","Yellow"]:
         if st.button(c, key=f"stroop_{c}"):
-            if c==color: st.success("✅ Correct!")
-            else: st.error("❌ Incorrect")
+            if c==color:
+                st.success("✅ Correct!")
+            else:
+                st.error("❌ Incorrect")
             st.session_state.stroop_word = random.choice(["Red","Green","Blue","Yellow"])
             st.session_state.stroop_color = random.choice(["Red","Green","Blue","Yellow"])
 
@@ -165,7 +199,7 @@ def riddle_quiz():
     st.subheader("🧩 Riddle Quiz")
     riddle = st.session_state.riddle
     ans = st.text_input(riddle["question"], key="riddle_input")
-    if ans.lower() == riddle["answer"]:
+    if ans.lower()==riddle["answer"]:
         st.success("🎉 Correct!")
         st.session_state.riddle = random.choice([
             {"question":"What has keys but can't open locks?","answer":"keyboard"},
@@ -174,40 +208,55 @@ def riddle_quiz():
 
 def memory_game():
     st.subheader("🧠 Memory Game: Color Sequence")
+    
     if st.session_state.show_sequence:
         st.info("Memorize this sequence:")
         st.write(" - ".join(st.session_state.memory_sequence))
         if st.button("I've memorized, hide sequence"):
             st.session_state.show_sequence = False
     else:
-        user_seq = [st.selectbox(f"Step {i+1}", ["Red","Green","Blue","Yellow"], key=f"mem_{i}") for i in range(len(st.session_state.memory_sequence))]
+        user_seq = [st.selectbox(f"Step {i+1}", ["Red","Green","Blue","Yellow"], key=f"mem_{i}") 
+                    for i in range(len(st.session_state.memory_sequence))]
         if st.button("Check Sequence"):
-            if user_seq == st.session_state.memory_sequence: st.success("🎉 Correct sequence!")
-            else: st.error(f"❌ Wrong! Correct was: {', '.join(st.session_state.memory_sequence)}")
+            if user_seq == st.session_state.memory_sequence:
+                st.success("🎉 Correct sequence!")
+            else:
+                st.error(f"❌ Wrong! Correct was: {', '.join(st.session_state.memory_sequence)}")
             st.session_state.memory_sequence = random.choices(["Red","Green","Blue","Yellow"], k=3)
             st.session_state.show_sequence = True
 
 # ---------------- Sidebar ---------------- #
 with st.sidebar:
     st.header("📂 Features")
+    # Reflection
+    st.subheader("Daily Reflection")
     for idx,q in enumerate(REFLECTION_QUESTIONS):
         st.session_state.reflection_answers[idx] = st.text_input(q, key=f"sidebar_reflection_{idx}")
     if st.button("Save Reflection", key="sidebar_save_reflection"):
-        save_reflection(); st.success("Reflection saved.")
+        save_reflection()
+        st.success("Reflection saved.")
+
     plot_mood_trends()
     habit_tracker()
     mood_check_game()
     stroop_game()
     riddle_quiz()
     memory_game()
+
+    # Gratitude
     st.subheader("🌸 Gratitude Wall")
     gratitude_input = st.text_input("What are you grateful for today?", key="gratitude_input")
     if st.button("Add Gratitude", key="add_gratitude"):
         st.session_state.gratitude_list.append(f"{time.strftime('%Y-%m-%d')}: {gratitude_input}")
     st.write("\n".join(st.session_state.get("gratitude_list", [])))
+
+    # Micro-Challenges
     st.subheader("🎯 Daily Micro-Challenges")
-    challenges = ["Take a 2-min walk","Drink a glass of water","Stretch for 1 minute"]
-    for idx,c in enumerate(challenges): done = st.checkbox(c, key=f"challenge_{idx}")
+    challenges = ["Take a 2-min walk", "Drink a glass of water", "Stretch for 1 minute"]
+    for idx, c in enumerate(challenges):
+        done = st.checkbox(c, key=f"challenge_{idx}")
+
+    # Streaks & Affirmation
     st.info(f"Reflection Streak: {st.session_state.reflection_streak} days")
     st.info(f"Exercise Streak: {st.session_state.exercise_streak} days")
     st.info(f"Habits tracked: {len(st.session_state.habits)}")
@@ -215,24 +264,35 @@ with st.sidebar:
     st.subheader("💛 Daily Affirmation")
     st.info(random.choice(AFFIRMATIONS))
 
-# ---------------- Main Chat ---------------- #
-model = genai.GenerativeModel("models/gemini-2.5-chat-bison")
+# ---------------- Main Chat Area ---------------- #
 user_input = st.chat_input("How are you feeling today?")
+
 if user_input:
     st.session_state.chat_history.append(("user", user_input))
-    response = model.generate_content(f"You are an empathetic AI therapist. Respond kindly and supportively to: {user_input}")
-    bot_reply = response.text
+    
+    # Safe ChatCompletion call
+    response = genai.ChatCompletion.create(
+        model="models/gemini-2.5-chat-bison",
+        messages=[{"role": "user", "content": user_input}],
+        temperature=0.7
+    )
+    
+    bot_reply = response.last.content
     st.session_state.chat_history.append(("bot", bot_reply))
     st.session_state.last_user_was_stressed = detect_stress(user_input)
 
 # Render chat
 for role,msg in st.session_state.chat_history:
-    if role=="user": st.chat_message("user").write(msg)
-    else: st.chat_message("assistant").write(msg)
+    if role=="user":
+        st.chat_message("user").write(msg)
+    else:
+        st.chat_message("assistant").write(msg)
 
 # Suggested activities if stressed
 if st.session_state.get("last_user_was_stressed",False):
     st.subheader("💡 Suggested Activities")
-    col1,col2 = st.columns(2)
-    if col1.button("🌿 Breathing Exercise", key="suggest_breath"): breathing_exercise()
-    if col2.button("💛 Positive Affirmation", key="suggest_affirm"): show_affirmation()
+    col1, col2 = st.columns(2)
+    if col1.button("🌿 Breathing Exercise", key="suggest_breath"):
+        breathing_exercise()
+    if col2.button("💛 Positive Affirmation", key="suggest_affirm"):
+        show_affirmation()
