@@ -265,25 +265,25 @@ with st.sidebar:
     st.info(random.choice(AFFIRMATIONS))
 
 # ---------------- Main Chat Area ---------------- #
+model = genai.GenerativeModel("models/gemini-2.5-chat-bison")
 user_input = st.chat_input("How are you feeling today?")
 
 if user_input:
     st.session_state.chat_history.append(("user", user_input))
     
-    # Safe ChatCompletion call
-    response = genai.ChatCompletion.create(
-        model="models/gemini-2.5-chat-bison",
-        messages=[{"role": "user", "content": user_input}],
+    # Safe GenerativeModel call
+    response = model.generate_content(
+        f"You are an empathetic AI therapist. Respond kindly and supportively to: {user_input}",
         temperature=0.7
     )
     
-    bot_reply = response.last.content
+    bot_reply = response.text
     st.session_state.chat_history.append(("bot", bot_reply))
     st.session_state.last_user_was_stressed = detect_stress(user_input)
 
 # Render chat
-for role,msg in st.session_state.chat_history:
-    if role=="user":
+for role, msg in st.session_state.chat_history:
+    if role == "user":
         st.chat_message("user").write(msg)
     else:
         st.chat_message("assistant").write(msg)
