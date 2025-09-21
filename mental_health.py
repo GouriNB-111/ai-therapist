@@ -8,12 +8,7 @@ import google.generativeai as genai
 import plotly.express as px
 
 # ---------------- Load API Key ---------------- #
-
-import streamlit as st
-import google.generativeai as genai
-
 genai.configure(api_key=st.secrets["GOOGLE_API_KEY"])
-
 
 # ---------------- Streamlit Config ---------------- #
 st.set_page_config(page_title="AI Therapist", page_icon="💬", layout="wide")
@@ -202,25 +197,22 @@ def riddle_quiz():
     st.subheader("🧩 Riddle Quiz")
     riddle = st.session_state.riddle
     ans = st.text_input(riddle["question"], key="riddle_input")
-    if ans.lower()==riddle["answer"]:
+    if ans.lower() == riddle["answer"]:
         st.success("🎉 Correct!")
         st.session_state.riddle = random.choice([
             {"question":"What has keys but can't open locks?","answer":"keyboard"},
             {"question":"What can run but has no legs?","answer":"clock"}
         ])
 
-
 def memory_game():
     st.subheader("🧠 Memory Game: Color Sequence")
     
-    # Step 1: Show sequence
     if st.session_state.show_sequence:
         st.info("Memorize this sequence:")
         st.write(" - ".join(st.session_state.memory_sequence))
         if st.button("I've memorized, hide sequence"):
             st.session_state.show_sequence = False
     else:
-        # Step 2: User input
         user_seq = [st.selectbox(f"Step {i+1}", ["Red","Green","Blue","Yellow"], key=f"mem_{i}") 
                     for i in range(len(st.session_state.memory_sequence))]
         if st.button("Check Sequence"):
@@ -228,14 +220,12 @@ def memory_game():
                 st.success("🎉 Correct sequence!")
             else:
                 st.error(f"❌ Wrong! Correct was: {', '.join(st.session_state.memory_sequence)}")
-            # Reset for next round
             st.session_state.memory_sequence = random.choices(["Red","Green","Blue","Yellow"], k=3)
             st.session_state.show_sequence = True
 
 # ---------------- Sidebar ---------------- #
 with st.sidebar:
     st.header("📂 Features")
-    # Reflection
     st.subheader("Daily Reflection")
     for idx,q in enumerate(REFLECTION_QUESTIONS):
         st.session_state.reflection_answers[idx] = st.text_input(q, key=f"sidebar_reflection_{idx}")
@@ -243,30 +233,24 @@ with st.sidebar:
         save_reflection()
         st.success("Reflection saved.")
 
-    # Graphs
     plot_mood_trends()
-
-    # Habits & Games
     habit_tracker()
     mood_check_game()
     stroop_game()
     riddle_quiz()
     memory_game()
 
-    # Gratitude
     st.subheader("🌸 Gratitude Wall")
     gratitude_input = st.text_input("What are you grateful for today?", key="gratitude_input")
     if st.button("Add Gratitude", key="add_gratitude"):
         st.session_state.gratitude_list.append(f"{time.strftime('%Y-%m-%d')}: {gratitude_input}")
     st.write("\n".join(st.session_state.get("gratitude_list", [])))
 
-    # Micro-Challenges
     st.subheader("🎯 Daily Micro-Challenges")
     challenges = ["Take a 2-min walk", "Drink a glass of water", "Stretch for 1 minute"]
     for idx, c in enumerate(challenges):
         done = st.checkbox(c, key=f"challenge_{idx}")
 
-    # Streaks & Affirmation
     st.info(f"Reflection Streak: {st.session_state.reflection_streak} days")
     st.info(f"Exercise Streak: {st.session_state.exercise_streak} days")
     st.info(f"Habits tracked: {len(st.session_state.habits)}")
@@ -280,27 +264,23 @@ user_input = st.chat_input("How are you feeling today?")
 if user_input:
     st.session_state.chat_history.append(("user", user_input))
     
-    # Use the new API syntax
-    response = genai.ChatCompletion.create(
+    response = genai.generate_text(
         model="gemini-2.5-flash",
-        messages=[{"role": "user", "content": f"You are an empathetic AI therapist. Respond kindly and supportively to: {user_input}"}]
+        prompt=f"You are an empathetic AI therapist. Respond kindly and supportively to: {user_input}"
     )
     
-    # Get the bot reply
-    bot_reply = response.choices[0].content
-    
+    bot_reply = response.text
     st.session_state.chat_history.append(("bot", bot_reply))
     st.session_state.last_user_was_stressed = detect_stress(user_input)
 
 # Render chat
-for role,msg in st.session_state.chat_history:
-    if role=="user":
+for role, msg in st.session_state.chat_history:
+    if role == "user":
         st.chat_message("user").write(msg)
     else:
         st.chat_message("assistant").write(msg)
 
-# Suggested activities if stressed
-if st.session_state.get("last_user_was_stressed",False):
+if st.session_state.get("last_user_was_stressed", False):
     st.subheader("💡 Suggested Activities")
     col1, col2 = st.columns(2)
     if col1.button("🌿 Breathing Exercise", key="suggest_breath"):
