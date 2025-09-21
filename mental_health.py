@@ -263,17 +263,18 @@ user_input = st.chat_input("How are you feeling today?")
 
 if user_input:
     st.session_state.chat_history.append(("user", user_input))
-    
-    response = genai.generate_text(
-        model="gemini-2.5-flash",
-        prompt=f"You are an empathetic AI therapist. Respond kindly and supportively to: {user_input}"
+
+    # Use chat model with correct model path
+    response = genai.ChatCompletion.create(
+        model="models/gemini-2.5-chat-bison",  # <-- correct path for chatbot
+        messages=[{"role": "user", "content": user_input}]
     )
     
-    bot_reply = response.text
+    bot_reply = response["candidates"][0]["content"]
     st.session_state.chat_history.append(("bot", bot_reply))
     st.session_state.last_user_was_stressed = detect_stress(user_input)
 
-# Render chat
+# Render chat history
 for role, msg in st.session_state.chat_history:
     if role == "user":
         st.chat_message("user").write(msg)
