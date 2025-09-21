@@ -4,13 +4,16 @@ import json
 import random
 import pandas as pd
 import streamlit as st
-from dotenv import load_dotenv
 import google.generativeai as genai
 import plotly.express as px
 
 # ---------------- Load API Key ---------------- #
-load_dotenv()
-genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
+
+import streamlit as st
+import google.generativeai as genai
+
+genai.configure(api_key=st.secrets["GEMINI_API_KEY"])
+
 
 # ---------------- Streamlit Config ---------------- #
 st.set_page_config(page_title="AI Therapist", page_icon="💬", layout="wide")
