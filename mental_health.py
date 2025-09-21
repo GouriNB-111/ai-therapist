@@ -279,6 +279,12 @@ if user_input:
         st.session_state.chat_history = []
     st.session_state.chat_history.append(("user", user_input))
 
+    # --- Detect stress in the user input ---
+    if detect_stress(user_input):
+        st.session_state.last_user_was_stressed = True
+    else:
+        st.session_state.last_user_was_stressed = False
+
     # Use Gemini 1.5 Flash instead of text-bison
     model = genai.GenerativeModel("gemini-1.5-flash")
     response = model.generate_content(
