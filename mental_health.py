@@ -10,7 +10,7 @@ import plotly.express as px
 
 # ---------------- Load API Key ---------------- #
 load_dotenv()
-genai.configure(api_key=os.getenv("GOOGLE_API_KEY"))
+genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
 
 # ---------------- Streamlit Config ---------------- #
 st.set_page_config(page_title="AI Therapist", page_icon="💬", layout="wide")
@@ -206,15 +206,18 @@ def riddle_quiz():
             {"question":"What can run but has no legs?","answer":"clock"}
         ])
 
+
 def memory_game():
     st.subheader("🧠 Memory Game: Color Sequence")
     
+    # Step 1: Show sequence
     if st.session_state.show_sequence:
         st.info("Memorize this sequence:")
         st.write(" - ".join(st.session_state.memory_sequence))
         if st.button("I've memorized, hide sequence"):
             st.session_state.show_sequence = False
     else:
+        # Step 2: User input
         user_seq = [st.selectbox(f"Step {i+1}", ["Red","Green","Blue","Yellow"], key=f"mem_{i}") 
                     for i in range(len(st.session_state.memory_sequence))]
         if st.button("Check Sequence"):
@@ -222,6 +225,7 @@ def memory_game():
                 st.success("🎉 Correct sequence!")
             else:
                 st.error(f"❌ Wrong! Correct was: {', '.join(st.session_state.memory_sequence)}")
+            # Reset for next round
             st.session_state.memory_sequence = random.choices(["Red","Green","Blue","Yellow"], k=3)
             st.session_state.show_sequence = True
 
@@ -236,7 +240,10 @@ with st.sidebar:
         save_reflection()
         st.success("Reflection saved.")
 
+    # Graphs
     plot_mood_trends()
+
+    # Habits & Games
     habit_tracker()
     mood_check_game()
     stroop_game()
@@ -265,36 +272,27 @@ with st.sidebar:
     st.info(random.choice(AFFIRMATIONS))
 
 # ---------------- Main Chat Area ---------------- #
+model = genai.GenerativeModel("gemini-2.5-flash")
 user_input = st.chat_input("How are you feeling today?")
 
 if user_input:
-    # Save user message
     st.session_state.chat_history.append(("user", user_input))
-    
-    # Generate AI response (safe for v0.2.0)
-    response = genai.generate_text(
-        model="models/text-bison-001",
-        prompt=f"You are an empathetic AI therapist. Respond kindly and supportively to: {user_input}",
-        temperature=0.7,
-        max_output_tokens=300
+    response = model.generate_content(
+        f"You are an empathetic AI therapist. Respond kindly and supportively to: {user_input}"
     )
-    bot_reply = response.candidates[0].output  # get text output
-    
-    # Save bot message
+    bot_reply = response.text
     st.session_state.chat_history.append(("bot", bot_reply))
-    
-    # Detect stress
     st.session_state.last_user_was_stressed = detect_stress(user_input)
 
-# Render chat history
-for role, msg in st.session_state.chat_history:
-    if role == "user":
+# Render chat
+for role,msg in st.session_state.chat_history:
+    if role=="user":
         st.chat_message("user").write(msg)
     else:
         st.chat_message("assistant").write(msg)
 
 # Suggested activities if stressed
-if st.session_state.get("last_user_was_stressed", False):
+if st.session_state.get("last_user_was_stressed",False):
     st.subheader("💡 Suggested Activities")
     col1, col2 = st.columns(2)
     if col1.button("🌿 Breathing Exercise", key="suggest_breath"):
