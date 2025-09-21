@@ -275,15 +275,20 @@ with st.sidebar:
     st.info(random.choice(AFFIRMATIONS))
 
 # ---------------- Main Chat Area ---------------- #
-model = genai.GenerativeModel("gemini-2.5-flash")
 user_input = st.chat_input("How are you feeling today?")
 
 if user_input:
     st.session_state.chat_history.append(("user", user_input))
-    response = model.generate_content(
-        f"You are an empathetic AI therapist. Respond kindly and supportively to: {user_input}"
+    
+    # Use the new API syntax
+    response = genai.ChatCompletion.create(
+        model="gemini-2.5-flash",
+        messages=[{"role": "user", "content": f"You are an empathetic AI therapist. Respond kindly and supportively to: {user_input}"}]
     )
-    bot_reply = response.text
+    
+    # Get the bot reply
+    bot_reply = response.choices[0].content
+    
     st.session_state.chat_history.append(("bot", bot_reply))
     st.session_state.last_user_was_stressed = detect_stress(user_input)
 
