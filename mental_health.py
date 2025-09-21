@@ -265,20 +265,20 @@ with st.sidebar:
     st.info(random.choice(AFFIRMATIONS))
 
 # ---------------- Main Chat Area ---------------- #
-model = genai.GenerativeModel("gemini-2.5-flash")  # Safe model for v0.2.0
-
 user_input = st.chat_input("How are you feeling today?")
 
 if user_input:
     # Save user message
     st.session_state.chat_history.append(("user", user_input))
     
-    # Generate AI therapist response
-    response = model.generate_content(
-        f"You are an empathetic AI therapist. Respond kindly and supportively to: {user_input}",
-        temperature=0.7
+    # Generate AI response (safe for v0.2.0)
+    response = genai.generate_text(
+        model="models/text-bison-001",
+        prompt=f"You are an empathetic AI therapist. Respond kindly and supportively to: {user_input}",
+        temperature=0.7,
+        max_output_tokens=300
     )
-    bot_reply = response.text
+    bot_reply = response.candidates[0].output  # get text output
     
     # Save bot message
     st.session_state.chat_history.append(("bot", bot_reply))
