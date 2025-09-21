@@ -53,13 +53,17 @@ This is a **Streamlit-based web application** that offers a safe and supportive 
 
 ---
 
-## **Project Structure**
+## Project Structure
 
+```
 ai-therapist/
-├── mental_health.py # Main Streamlit app code
-├── .env # API key and environment variables (not in GitHub)
-├── checkins.json # Stores user reflection responses
-├── habits.csv # Tracks habit completion
-├── README.md # Project documentation
-├── requirements.txt # Python dependencies
+├── mental_health.py       # Main Streamlit app code
+├── .env                  # API key and environment variables (not in GitHub)
+├── checkins.json         # Stores user reflection responses
+├── habits.csv            # Tracks habit completion
+├── README.md             # Project documentation
+├── requirements.txt      # Python dependencies
+```
+
+
 
